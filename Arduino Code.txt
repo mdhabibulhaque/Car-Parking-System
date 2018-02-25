@@ -1,0 +1,92 @@
+
+#define trigPin 8
+#define echoPin 9
+#define beepPin 10
+#define scalingfactor 10
+
+//Voice
+
+int voicePin1 = 13;
+
+
+int inches = 0;
+unsigned long duration = 0;
+unsigned long maxtime = 1000;
+unsigned long i = 1;
+unsigned long time2 = 0;
+unsigned long time1 = 0;
+
+void setup(){
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+  pinMode(beepPin, OUTPUT);
+
+
+  //voice command feature
+
+  Serial.begin(9600);
+  pinMode(voicePin1,OUTPUT);
+  digitalWrite(voicePin1,LOW);
+}
+
+void logdistance(){
+  time1 = millis();
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(1000);
+  digitalWrite(trigPin, LOW);
+  duration = pulseIn(echoPin, HIGH);
+  inches = duration/148;
+  Serial.print(inches);
+  Serial.println();  
+  time2 = millis();
+  maxtime = scalingfactor*inches;
+}
+
+void delayandcheckdistance(){
+  i=1;
+  while(1){
+    if (i % 60 == 0){
+      logdistance();
+    }
+    delay(1);
+    ++i;
+    if (i >= maxtime){
+      break;
+    }
+  }
+}
+
+void beep(){
+  digitalWrite(beepPin, HIGH);
+  delay(60);
+  logdistance();
+  if(time2-time1 < 30){
+    delay(60-(time2-time1));
+  }
+  digitalWrite(beepPin, LOW);
+}
+
+
+void voice()
+{
+  if(Serial.available()>0)
+ {
+   String value = Serial.readStringUntil('\n');
+   Serial.println(value);
+   if(value == "on")
+   {
+     digitalWrite(voicePin1,HIGH);
+   }
+   else if(value == "off")
+   {
+     digitalWrite(voicePin1,LOW);
+   }
+ 
+ }
+}
+
+void loop(){
+  beep();
+  delayandcheckdistance();
+  voice();
+}
